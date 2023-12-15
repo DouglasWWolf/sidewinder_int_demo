@@ -36,7 +36,7 @@ void initializeInterrupts(uint8_t* userspacePtr, std::string device);
 
 
 //================================================================================
-// main() - Just calls "excute()" and catches exceptions
+// main() - Performs program setup, initializes interrupts, then hangs
 //================================================================================
 int main()
 {
