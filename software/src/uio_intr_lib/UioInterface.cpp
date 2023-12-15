@@ -224,14 +224,20 @@ void UioInterface::spawnInterruptMonitor(int uioDevice)
 //==========================================================================================================
 // This is a list of reasons that monitorInterrupts() could crash
 //==========================================================================================================
-enum : int
+enum 
 {
     CRASH_OPEN_PDEVICE = 1,
     CRASH_OPEN_CONFIG  = 2,
     CRASH_PREAD_1      = 3,
     CRASH_PREAD_2      = 4,
-    CRASH_READ_FAIL    = 5,
-    CRASH_READ_LEN     = 6
+    CRASH_READ_LEN     = 5
+};
+
+class crash
+{
+public:
+    crash(int reason) {code = reason;}
+    int code;
 };
 //==========================================================================================================
 
@@ -249,25 +255,25 @@ void UioInterface::monitorInterrupts(int uioDevice)
     uint8_t  commandHigh;
     char     filename[64];
 
-    try
+    while (true) try
     {    
         // Generate the filename of the psudeo-file that notifies us of interrupts
         sprintf(filename, "/dev/uio%d", uioDevice);
 
         // Open the psuedo-file that notifies us of interrupts
         uiofd = open(filename, O_RDONLY);
-        if (uiofd < 0) throw CRASH_OPEN_PDEVICE;
+        if (uiofd < 0) throw crash(CRASH_OPEN_PDEVICE);
 
         // Generate the filename of the PCI config-space psuedo-file
         sprintf(filename, "/sys/class/uio/uio%d/device/config", uioDevice);
 
         // Open the file that gives us access to the PCI device's confiuration space
         configfd = open(filename, O_RDWR);
-        if (configfd < 0) throw CRASH_OPEN_CONFIG;
+        if (configfd < 0) throw crash(CRASH_OPEN_CONFIG);
 
         // Fetch the upper byte of the PCI configuration space command word
         err = pread(configfd, &commandHigh, 1, 5);
-        if (err != 1) throw CRASH_PREAD_1;
+        if (err != 1) throw crash(CRASH_PREAD_1);
     
         // Turn off the "Disable interrupts" flag
         commandHigh &= ~0x4;
@@ -277,7 +283,7 @@ void UioInterface::monitorInterrupts(int uioDevice)
         {
             // Enable (or re-enable) interrupts
             err = pwrite(configfd, &commandHigh, 1, 5);
-            if (err != 1) throw CRASH_PREAD_2;
+            if (err != 1) throw crash(CRASH_PREAD_2);
 
             // Wait for notification that an interrupt has occured
             err = read(uiofd, &notification, 4);
@@ -287,11 +293,12 @@ void UioInterface::monitorInterrupts(int uioDevice)
             {
                 close(configfd);
                 close(uiofd);
-                throw CRASH_READ_FAIL;
+                usleep(2000000);
+                break;
             }
             
             // If we didn't read exactly 4 bytes, something is seriously wrong
-            if (err != 4) throw CRASH_READ_LEN;
+            if (err != 4) throw crash(CRASH_READ_LEN);
 
             // Give the ISR a chance to handle and clear the interrupts
             handler_->topLevelHandler();
@@ -299,9 +306,9 @@ void UioInterface::monitorInterrupts(int uioDevice)
     }
 
     // Call the crash handler, and exit the thread
-    catch(int reason)
+    catch(crash& reason)
     {
-        crashHandler(reason);
+        crashHandler(reason.code);
     }
 }
 //=================================================================================================
