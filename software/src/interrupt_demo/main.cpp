@@ -67,13 +67,12 @@ int main()
 
 
 //================================================================================
-// execute() - Takes all the steps neccessary to enable, detect and report 
-//             interrupts.
+// initializeInterrupts() - Takes all the steps neccessary to enable, detect and
+//                          report interrupts.
 //================================================================================
 void initializeInterrupts(uint8_t* userspacePtr, std::string device)
 {
- 
-    // Tell the interrupt handler where to find its registers
+     // Tell the interrupt handler where to find its registers
     handler.initialize(userspacePtr, INTR_CTRL_BASE_ADDR);
 
     // Initialise the userspace I/O subsystem
