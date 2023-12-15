@@ -14,7 +14,6 @@
 #include "UioInterface.h"
 
 static volatile int bitBucket;
-
 namespace fs=std::filesystem;
 
 
@@ -193,32 +192,18 @@ void UioInterface::initialize(std::string device, IntrControlBase* handler)
     registerUioDevice(device);
 
     // Fetch the UIO index that corresponds to our device
-    int index = findUioIndex(bdf);
+    int uioIndex = findUioIndex(bdf);
 
     // If we couldn't find a valid index, complain and give up
-    if (index < 0) throwRuntime("Can't initialize UIO subsystem for device %s", device.c_str());
+    if (uioIndex < 0) throwRuntime("Can't initialize UIO subsystem for device %s", device.c_str());
 
-    // Spawn a thread that will wait for incoming interrupt notifications    
-    spawnInterruptMonitor(index);
-}
-//=================================================================================================
-
-
-
-//==========================================================================================================
-// spawnTopLevelInterruptHandler() - Launches "monitorInterrupts" in its own thread in order to wait for
-//                                   incoming interrupts and distribute them to their handlers
-//==========================================================================================================
-void UioInterface::spawnInterruptMonitor(int uioDevice)
-{
     // Spawn "monitorInterrupts()" in its own thread
-    std::thread th(&UioInterface::monitorInterrupts, this, uioDevice);
+    std::thread th(&UioInterface::monitorInterrupts, this, uioIndex);
 
     // Let it keep running, even when "thread" goes out of scope
     th.detach();
 }
-//==========================================================================================================
-
+//=================================================================================================
 
 
 //==========================================================================================================

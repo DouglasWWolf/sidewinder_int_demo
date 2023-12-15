@@ -6,7 +6,6 @@
 #include <string>
 #include "IntrControlBase.h"
 
-
 //-------------------------------------------------------------------
 // This class manages the Linux Userspace I/O subsystem to receive
 // interrupts from a PCI device
@@ -22,9 +21,6 @@ public:
     virtual void crashHandler(int reason);
 
 protected:
-    
-    // Spawns a thread that waits for incoming interrupt notifications
-    void    spawnInterruptMonitor(int uioDevice);  
 
     // This runs in its own thread
     void    monitorInterrupts(int uioDevice);

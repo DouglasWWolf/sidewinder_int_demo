@@ -2,20 +2,13 @@
 #include "UioInterface.h"
 #include "PciDevice.h"
 
-
-/*
-
-IntrControlBase needs a default consructor
-             it needs an "initialize" constructor
-             It needs a crash handler
-*/
-
 //================================================================================
 // This is an example of a class that provides the interrupt-service routine
 //================================================================================
 class InterruptHandler : public IntrControlBase
 {
 public:
+
     using IntrControlBase::IntrControlBase;
 
 protected:
@@ -51,7 +44,6 @@ void execute();
 //================================================================================
 int main()
 {
-
     try
     {
         execute();
