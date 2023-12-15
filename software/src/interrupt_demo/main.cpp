@@ -31,7 +31,7 @@ const uint32_t   INTR_CTRL_BASE_ADDR = 0x0000;
 //================================================================================
 // Forward declarations
 //================================================================================
-void execute();
+void initializeInterrupts(uint8_t* userspacePtr, std::string device);
 //================================================================================
 
 
@@ -42,7 +42,18 @@ int main()
 {
     try
     {
-        execute();
+        // Map the FPGA's registers into userspace
+        PCI.open(device);
+
+        // Get a userspace pointer to the first resource region for this PCI device
+        uint8_t* userspacePtr = PCI.resourceList()[0].baseAddr;
+
+        // Initialize the interrupt system
+        initializeInterrupts(userspacePtr, device);
+
+        // This thread is now free to go off and do other things
+        printf("Waiting for interrupts\n");
+        while(1) sleep(999999999);
     }
     catch(const std::exception& e)
     {
@@ -59,13 +70,8 @@ int main()
 // execute() - Takes all the steps neccessary to enable, detect and report 
 //             interrupts.
 //================================================================================
-void execute()
+void initializeInterrupts(uint8_t* userspacePtr, std::string device)
 {
-    // Map the FPGA's registers into userspace
-    PCI.open(device);
-
-    // Get a userspace pointer to the first resource region for this PCI device
-    uint8_t* userspacePtr = PCI.resourceList()[0].baseAddr;
  
     // Tell the interrupt handler where to find its registers
     handler.initialize(userspacePtr, INTR_CTRL_BASE_ADDR);
@@ -78,9 +84,5 @@ void execute()
 
     // And globally enable interrupts
     handler.setGlobalEnable(true);
-
-    // This thread is now free to go off and do other things
-    printf("Waiting for interrupts\n");
-    while(1) sleep(999999999);
 }
 //================================================================================
