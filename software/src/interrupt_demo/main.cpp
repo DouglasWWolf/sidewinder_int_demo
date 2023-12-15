@@ -7,10 +7,6 @@
 //================================================================================
 class InterruptHandler : public IntrControlBase
 {
-public:
-
-    using IntrControlBase::IntrControlBase;
-
 protected:
 
     virtual void isr(uint32_t pending, int IRQ, uint32_t count)
